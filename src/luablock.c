@@ -1,6 +1,7 @@
 #include "luaeng.h"
 #include "luablock.h"
 #include "../../ClassiCube/src/Block.h"
+#include "../../ClassiCube/src/Game.h"
 
 static int block_getname(lua_State *L) {
 	cc_string bname = Block_UNSAFE_GetName(
@@ -22,10 +23,26 @@ static int block_parse(lua_State *L) {
 	return 1;
 }
 
+static int block_set(lua_State *L) {
+	int x = (int)luaL_checkinteger(L, 1),
+	y = (int)luaL_checkinteger(L, 2),
+	z = (int)luaL_checkinteger(L, 3);
+	BlockID id = (BlockID)luaL_checkinteger(L, 4);
+
+	if(lua_toboolean(L, 5))
+		Game_ChangeBlock(x, y, z, id);
+	else
+		Game_UpdateBlock(x, y, z, id);
+
+	return 0;
+}
+
 static const luaL_Reg blocklib[] = {
 	{"getname", block_getname},
 	{"findid", block_findid},
 	{"parse", block_parse},
+
+	{"set", block_set},
 
 	{NULL, NULL}
 };

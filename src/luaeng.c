@@ -3,6 +3,7 @@
 #include "luaevent.h"
 #include "luablock.h"
 #include "luamisc.h"
+#include "luaserver.h"
 
 lua_State *MainState = NULL;
 
@@ -62,6 +63,7 @@ static const luaL_Reg lualibs[] = {
 	{"event", luaopen_event},
 	{"block", luaopen_block},
 	{"misc", luaopen_misc},
+	{"server", luaopen_server},
 
 	{NULL, NULL}
 };

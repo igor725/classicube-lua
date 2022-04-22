@@ -17,6 +17,10 @@ static const cc_string strings[] = {
 	String_FromConst("&cNo arguments passed, see /client help lua"),
 };
 
+static cc_bool IsWrapper(char c) {
+	return c == '\0' || c == ' ' || c == '-' || c == '>' || c == '<' || c == '/' || c == '\\';
+}
+
 static void LuaCmd_Execute(const cc_string *args, int argsCount) {
 	if(!argsCount) {
 		Chat_Add(&strings[1]);
@@ -41,7 +45,7 @@ static void LuaCmd_Execute(const cc_string *args, int argsCount) {
 		int top = lua_gettop(MainState);
 		String_AppendConst(&out, "&aCode executed");
 		if(top > 0) {
-			String_AppendConst(&out, ": ");
+			String_AppendConst(&out, "&f: ");
 			for(int i = 1; i <= top; i++) {
 				switch(lua_type(MainState, i)) {
 					case LUA_TSTRING:
@@ -68,10 +72,16 @@ static void LuaCmd_Execute(const cc_string *args, int argsCount) {
 
 	cc_string part, left = out;
 
-	while(left.length > 80) {
-		part = String_UNSAFE_Substring(&left, 0, 80);
+	while(left.length > 70) {
+		cc_uint16 len = 70;
+		for(cc_uint16 i = len; i > 0; i--)
+			if(IsWrapper(left.buffer[i])) {
+				len = i;
+				break;
+			}
+		part = String_UNSAFE_Substring(&left, 0, len);
 		Chat_Add(&part);
-		left = String_UNSAFE_SubstringAt(&left, 80);
+		left = String_UNSAFE_SubstringAt(&left, len);
 	}
 	Chat_Add(&left);
 }
