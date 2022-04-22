@@ -35,33 +35,29 @@ static void LuaCmd_Execute(const cc_string *args, int argsCount) {
 
 	if(failed) {
 		cc_string luastring = String_FromReadonly(lua_tostring(MainState, -1));
-		String_Format1(&out, "&cFailed to execute code: %s", &luastring);
+		String_Format1(&out, "&cFailed to execute code&f: %s", &luastring);
 		lua_pop(MainState, 1);
 	} else {
 		int top = lua_gettop(MainState);
 		String_AppendConst(&out, "&aCode executed");
 		if(top > 0) {
 			String_AppendConst(&out, ": ");
-			for(int i = top; i > 0; i--) {
-				switch(lua_type(MainState, -i)) {
+			for(int i = 1; i <= top; i++) {
+				switch(lua_type(MainState, i)) {
 					case LUA_TSTRING:
-						String_Append(&out, '"');
-						String_AppendConst(&out, lua_tostring(MainState, -i));
-						String_Append(&out, '"');
+						String_Format1(&out, "\"%c\"", lua_tostring(MainState, i));
 						break;
 
 					case LUA_TNUMBER:
-						String_AppendFloat(&out, lua_tonumber(MainState, -i), 4);
+						String_AppendFloat(&out, lua_tonumber(MainState, i), 4);
 						break;
 
 					case LUA_TBOOLEAN:
-						String_AppendConst(&out, lua_toboolean(MainState, -i) ? "true" : "false");
+						String_AppendConst(&out, lua_toboolean(MainState, i) ? "true" : "false");
 						break;
 
 					default:
-						String_Append(&out, '[');
-						String_AppendConst(&out, luaL_typename(MainState, -i));
-						String_Append(&out, ']');
+						String_Format1(&out, "[%c]", luaL_typename(MainState, i));
 						break;
 				}
 				String_Append(&out, ' ');
@@ -70,7 +66,14 @@ static void LuaCmd_Execute(const cc_string *args, int argsCount) {
 		}
 	}
 
-	Chat_Add(&out);
+	cc_string part, left = out;
+
+	while(left.length > 80) {
+		part = String_UNSAFE_Substring(&left, 0, 80);
+		Chat_Add(&part);
+		left = String_UNSAFE_SubstringAt(&left, 80);
+	}
+	Chat_Add(&left);
 }
 
 static struct ChatCommand LuaCmd = {
