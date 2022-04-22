@@ -93,7 +93,11 @@ static void LuaPlugin_Init(void) {
 	String_AppendConst(&Server.AppName, " + Lua 1.0.0");
 }
 
+static void LuaPlugin_Free(void) {
+	lua_close(MainState);
+}
+
 CC_EXP int Plugin_ApiVersion = 1;
 CC_EXP struct IGameComponent Plugin_Component = {
-	LuaPlugin_Init
+	LuaPlugin_Init, LuaPlugin_Free
 };

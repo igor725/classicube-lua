@@ -1,6 +1,8 @@
 #include "luaeng.h"
 #include "luachat.h"
 #include "luaevent.h"
+#include "luablock.h"
+#include "luamisc.h"
 
 lua_State *MainState = NULL;
 
@@ -58,6 +60,9 @@ static const luaL_Reg lualibs[] = {
 	// ClassiCube stuff
 	{"chat", luaopen_chat},
 	{"event", luaopen_event},
+	{"block", luaopen_block},
+	{"misc", luaopen_misc},
+
 	{NULL, NULL}
 };
 
