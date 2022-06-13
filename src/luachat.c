@@ -39,6 +39,6 @@ int luaopen_chat(lua_State *L) {
 	lua_addintconst(L, MSG_TYPE_CLIENTSTATUS_1);
 	lua_addintconst(L, MSG_TYPE_CLIENTSTATUS_2);
 
-	luaL_register(L, luaL_checkstring(L, 1), chatlib);
+	luaL_newlib(L, chatlib);
 	return 1;
 }

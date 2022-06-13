@@ -2,6 +2,7 @@
 #include "luablock.h"
 #include "../../ClassiCube/src/Block.h"
 #include "../../ClassiCube/src/Game.h"
+#include "../../ClassiCube/src/World.h"
 
 static int block_getname(lua_State *L) {
 	cc_string bname = Block_UNSAFE_GetName(
@@ -37,17 +38,26 @@ static int block_set(lua_State *L) {
 	return 0;
 }
 
+static int block_get(lua_State *L) {
+	int x = (int)luaL_checkinteger(L, 1),
+	y = (int)luaL_checkinteger(L, 2),
+	z = (int)luaL_checkinteger(L, 3);
+	lua_pushinteger(MainState, World_GetBlock(x, y, z));
+	return 1;
+}
+
 static const luaL_Reg blocklib[] = {
 	{"getname", block_getname},
 	{"findid", block_findid},
 	{"parse", block_parse},
 
 	{"set", block_set},
+	{"get", block_get},
 
 	{NULL, NULL}
 };
 
 int luaopen_block(lua_State *L) {
-	luaL_register(L, luaL_checkstring(L, 1), blocklib);
+	luaL_newlib(L, blocklib);
 	return 1;
 }

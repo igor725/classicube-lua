@@ -83,6 +83,7 @@ static void LuaCmd_Execute(const cc_string *args, int argsCount) {
 		Chat_Add(&part);
 		left = String_UNSAFE_SubstringAt(&left, len);
 	}
+
 	Chat_Add(&left);
 }
 
@@ -102,12 +103,17 @@ static void LuaPlugin_Init(void) {
 		Chat_Add(&strings[0]);
 		return;
 	}
+
+	luaL_dofile(MainState, "autorun.lua");
+	lua_pop(MainState, 1);
+
 	Commands_Register(&LuaCmd);
 	String_AppendConst(&Server.AppName, " + Lua 1.0.0");
 }
 
 static void LuaPlugin_Free(void) {
 	lua_close(MainState);
+	MainState = NULL;
 }
 
 CC_EXP int Plugin_ApiVersion = 1;

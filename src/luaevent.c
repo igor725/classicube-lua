@@ -7,7 +7,8 @@
 static int event_register(lua_State *L) {}
 
 static cc_bool lookupeventfunc(const char *evsect, const char *evname) {
-	lua_getfield(MainState, LUA_REGISTRYINDEX, "ccevents");
+	if(!MainState) return false;
+	lua_getglobal(MainState, "ccevents");
 	lua_getfield(MainState, -1, evsect);
 	if(!lua_istable(MainState, -1)) {
 		lua_pop(MainState, 2);
@@ -218,12 +219,35 @@ static void entchatfont(void *obj) {
  * 
  */
 
-static void evtwndresize(void *obj) {}
-static void evtwndclose(void *obj) {}
-static void evtwndfocus(void *obj) {}
-static void evtwndstate(void *obj) {}
-static void evtwndcreate(void *obj) {}
-static void evtwndinactive(void *obj) {}
+static void evtwndresize(void *obj) {
+	(void)obj;
+	callvoidevent("window", "resize");
+}
+
+static void evtwndclose(void *obj) {
+	(void)obj;
+	callvoidevent("window", "close");
+}
+
+static void evtwndfocus(void *obj) {
+	(void)obj;
+	callvoidevent("window", "focus");
+}
+
+static void evtwndstate(void *obj) {
+	(void)obj;
+	callvoidevent("window", "state");
+}
+
+static void evtwndcreate(void *obj) {
+	(void)obj;
+	callvoidevent("window", "create");
+}
+
+static void evtwndinactive(void *obj) {
+	(void)obj;
+	callvoidevent("window", "inactive");
+}
 
 /**
  * 
@@ -231,11 +255,41 @@ static void evtwndinactive(void *obj) {}
  * 
  */
 
-static void evtinputpress(void *obj) {}
-static void evtinputdown(void *obj) {}
-static void evtinputup(void *obj) {}
-static void evtinputwheel(void *obj) {}
-static void evtinputtext(void *obj) {}
+static void evtinputpress(void *obj, char key) {
+	if(lookupeventfunc("input", "press")) {
+		lua_pushinteger(MainState, (lua_Integer)key);
+		lua_pcall(MainState, 1, 0, 0);
+	}
+}
+
+static void evtinputdown(void *obj, int key, cc_bool waspressed) {
+	if(lookupeventfunc("input", "down")) {
+		lua_pushinteger(MainState, (lua_Integer)key);
+		lua_pushboolean(MainState, waspressed);
+		lua_pcall(MainState, 2, 0, 0);
+	}
+}
+
+static void evtinputup(void *obj, int key) {
+	if(lookupeventfunc("input", "up")) {
+		lua_pushinteger(MainState, (lua_Integer)key);
+		lua_pcall(MainState, 1, 0, 0);
+	}
+}
+
+static void evtinputwheel(void *obj, float delta) {
+	if(lookupeventfunc("input", "wheel")) {
+		lua_pushnumber(MainState, (lua_Number)delta);
+		lua_pcall(MainState, 1, 0, 0);
+	}
+}
+
+static void evtinputtext(void *obj, cc_string *text) {
+	if(lookupeventfunc("input", "text")) {
+		lua_pushstringcc(MainState, text);
+		lua_pcall(MainState, 1, 0, 0);
+	}
+}
 
 /**
  * 
@@ -243,10 +297,34 @@ static void evtinputtext(void *obj) {}
  * 
  */
 
-static void evtpointermoved(void *obj) {}
-static void evtpointerdown(void *obj) {}
-static void evtpointerup(void *obj) {}
-static void evtpointerrawmove(void *obj) {}
+static void evtpointermoved(void *obj, int idx) {
+	if(lookupeventfunc("pointer", "moved")) {
+		lua_pushinteger(MainState, (lua_Integer)idx);
+		lua_pcall(MainState, 1, 0, 0);
+	}
+}
+
+static void evtpointerdown(void *obj, int idx) {
+	if(lookupeventfunc("pointer", "down")) {
+		lua_pushinteger(MainState, (lua_Integer)idx);
+		lua_pcall(MainState, 1, 0, 0);
+	}
+}
+
+static void evtpointerup(void *obj, int idx) {
+	if(lookupeventfunc("pointer", "up")) {
+		lua_pushinteger(MainState, (lua_Integer)idx);
+		lua_pcall(MainState, 1, 0, 0);
+	}
+}
+
+static void evtpointerrawmove(void *obj, float dx, float dy) {
+	if(lookupeventfunc("pointer", "rawmove")) {
+		lua_pushnumber(MainState, (lua_Number)dx);
+		lua_pushnumber(MainState, (lua_Number)dy);
+		lua_pcall(MainState, 2, 0, 0);
+	}
+}
 
 /**
  * 
@@ -273,29 +351,18 @@ static void evtnetplugmsg(void *obj, cc_uint8 channel, cc_uint8 *data) {
 	}
 }
 
-static int event_set(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TSTRING);
-	luaL_checktype(L, 2, LUA_TSTRING);
-	luaL_checktype(L, 3, LUA_TFUNCTION);
-	lua_getfield(L, LUA_REGISTRYINDEX, "ccevents");
-	lua_pushvalue(L, 1);
-	lua_gettable(L, -2);
-	if(!lua_istable(L, -1)) {
-		luaL_error(L, "Invalid event section");
-		return 0;
-	}
-	lua_pushvalue(L, 2);
-	lua_pushvalue(L, 3);
-	lua_settable(L, -3);
-	lua_pop(L, 2);
+static int newind(lua_State *L) {
+	luaL_error(L, "This table is readonly");
 	return 0;
 }
 
-static const luaL_Reg eventlib[] = {
-	{"set", event_set},
-
-	{NULL, NULL}
-};
+static void push_evtmetatable(lua_State *L) {
+	lua_newtable(L);
+	lua_pushcfunction(L, newind);
+	lua_setfield(L, -2, "__newindex");
+	lua_pushstring(L, "tf you doing here???");
+	lua_setfield(L, -2, "__metatable");
+}
 
 int luaopen_event(lua_State *L) {
 	lua_newtable(L);
@@ -311,7 +378,8 @@ int luaopen_event(lua_State *L) {
 	(lua_newtable(L), lua_setfield(L, -2, "input"));
 	(lua_newtable(L), lua_setfield(L, -2, "pointer"));
 	(lua_newtable(L), lua_setfield(L, -2, "net"));
-	lua_setfield(L, LUA_REGISTRYINDEX, "ccevents");
+	(push_evtmetatable(L), lua_setmetatable(L, -2));
+	lua_setglobal(L, "ccevents");
 	
 	// Entity events
 	Event_Register_(&EntityEvents.Added, NULL, evtentadded);
@@ -374,6 +442,5 @@ int luaopen_event(lua_State *L) {
 	Event_Register_(&NetEvents.Disconnected, NULL, evtnetdisconnect);
 	Event_Register_(&NetEvents.PluginMessageReceived, NULL, evtnetplugmsg);
 
-	luaL_register(L, luaL_checkstring(L, 1), eventlib);
-	return 1;
+	return 0;
 }

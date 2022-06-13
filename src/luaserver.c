@@ -39,6 +39,6 @@ static const luaL_Reg serverlib[] = {
 };
 
 int luaopen_server(lua_State *L) {
-	luaL_register(L, luaL_checkstring(L, 1), serverlib);
+	luaL_newlib(L, serverlib);
 	return 1;
 }

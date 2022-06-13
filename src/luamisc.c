@@ -28,6 +28,6 @@ static const luaL_Reg misclib[] = {
 };
 
 int luaopen_misc(lua_State *L) {
-	luaL_register(L, luaL_checkstring(L, 1), misclib);
+	luaL_newlib(L, misclib);
 	return 1;
 }

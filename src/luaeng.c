@@ -4,6 +4,7 @@
 #include "luablock.h"
 #include "luamisc.h"
 #include "luaserver.h"
+#include "luaworld.h"
 
 lua_State *MainState = NULL;
 
@@ -41,29 +42,13 @@ void *luaL_testudata (lua_State *L, int ud, const char *tname) {
 #endif
 
 static const luaL_Reg lualibs[] = {
-	// Lua stuff
-	{"", luaopen_base},
-	{LUA_MATHLIBNAME, luaopen_math},
-	{LUA_STRLIBNAME, luaopen_string},
-	{LUA_TABLIBNAME, luaopen_table},
-	{LUA_IOLIBNAME, luaopen_io},
-	{LUA_OSLIBNAME, luaopen_os},
-	{LUA_LOADLIBNAME, luaopen_package},
-	{LUA_DBLIBNAME, luaopen_debug},
-#ifdef CCLUA_HAS_BIT
-	{LUA_BITLIBNAME, luaopen_bit},
-#endif
-#ifdef CCLUA_HAS_JIT
-	{LUA_JITLIBNAME, luaopen_jit},
-	{LUA_FFILIBNAME, luaopen_ffi},
-#endif
-
 	// ClassiCube stuff
 	{"chat", luaopen_chat},
 	{"event", luaopen_event},
 	{"block", luaopen_block},
 	{"misc", luaopen_misc},
 	{"server", luaopen_server},
+	{"world", luaopen_world},
 
 	{NULL, NULL}
 };
@@ -71,12 +56,14 @@ static const luaL_Reg lualibs[] = {
 lua_State *LuaEng_SpawnState(void) {
 	lua_State *L = luaL_newstate();
 	if(!L) return NULL;
+	luaL_openlibs(L);
 
 	for(const luaL_Reg *lib = lualibs; lib->func; lib++) {
 #		if LUA_VERSION_NUM < 502
 			lua_pushcfunction(L, lib->func);
 			lua_pushstring(L, lib->name);
-			lua_call(L, 1, 0);
+			lua_call(L, 1, 1);
+			lua_setglobal(L, lib->name);
 #		else
 			luaL_requiref(L, lib->name, lib->func, 1);
 			lua_pop(L, 1);
